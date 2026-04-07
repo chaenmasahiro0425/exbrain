@@ -2,7 +2,7 @@
 
 > AIが勝手に記憶し、整理し、毎朝振り返ってくれるナレッジシステム
 >
-> Inspired by [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) + OpenClaw's Dreaming pattern
+> Inspired by [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) + the Dreaming pattern
 
 Claude Codeの中に眠っている記憶（Memory）、設定ファイル（CLAUDE.md）、スキル（Skills）を
 Obsidianで可視化し、毎朝・毎夕のDreamingで自動振り返りを行う仕組み。
@@ -76,7 +76,7 @@ vault/
 │  ├── PostToolUse → ファイル変更をログ記録                      │
 │  └── Stop → セッション終了をdaily noteに自動追記              │
 │                                                             │
-│  OpenClaw Cron（PCオン時の追加データ）                         │
+│  External AI Agent Cron（PCオン時の追加データ）                         │
 │  ├── SF/Stripe/HERP/YouTube等の専門データ追記                 │
 │  └── PCオフなら単にスキップ（Layer 1だけで完成）               │
 │                                                             │
@@ -103,7 +103,7 @@ memory/
 │   └── typefully-api.md         「X投稿はTypefully経由」
 │
 ├── project/ (4件)   ← プロジェクト状況
-│   └── personal-budget.md       「月間支出目標¥3,000,000」
+│   └── project-status.md        「プロジェクトAは進行中、来月リリース」
 │
 └── user/ (1件)      ← ユーザープロファイル
     └── user-profile.md          「シェル環境にまだ詳しくない」
@@ -114,7 +114,7 @@ AIが過去の失敗や指示を覚えていて、次から同じミスをしな
 
 ## Dreaming（朝夕の自動振り返り）
 
-OpenClawのSOUL/MEMORY/DREAMSパターンを参考に設計。
+External AI AgentのSOUL/MEMORY/DREAMSパターンを参考に設計。
 
 ```
 毎朝 07:00 — Morning Dreaming
@@ -175,7 +175,7 @@ DREAMS.mdに蓄積される内容:
 │
 ├── clients/               ← 顧客ナレッジ蓄積（Karpathyパターン）
 │   ├── _index.md          　 全顧客一覧
-│   └── naoru.md           　 議事録のたびに自動蓄積
+│   └── client-a.md           　 議事録のたびに自動蓄積
 │
 ├── meetings/              ← 議事録要点（/auto-minutes連携）
 ├── decisions/             ← 経営判断ログ
@@ -289,17 +289,17 @@ score: 74
 |------|------|------|
 | 09:00 | 経営管理部 定例 | |
 | 10:00 | 開発営業 定例 | |
-| 14:00 | デジライズ定例 | |
+| 14:00 | 社内定例 | |
 
 ## Gmail
 | From | Subject | Action |
 |------|---------|--------|
-| freee 上野 | セミナー開催打合せ | 要返信 |
+| 田中太郎 | セミナー開催打合せ | 要返信 |
 
 ## Slack Highlights
-- **#経営**: 人事部長アサイン議論
-- **#開発営業**: チャットbot進捗、SF議事録デモ依頼
-- **#日報_柴田**: エイジス様研修225万円受注ほぼ確定
+- **#general**: 組織体制の議論
+- **#sales**: チャットbot進捗、CRM連携デモ依頼
+- **#daily-report**: X社向け研修の受注ほぼ確定
 
 ## AI Analysis
 - 生産性: B — 会議完了率100%
@@ -307,13 +307,13 @@ score: 74
 - 営業: B- — 商談0件
 
 ## Morning Reflection
-- 昨日の決定: スクール料金改定を決定
-- 今日の注目: freeeセミナー返信、金成さんMTG
+- 昨日の決定: サービス料金改定を決定
+- 今日の注目: セミナー返信、パートナーMTG
 
 ## Evening Reflection
-- 今日のハイライト: エイジス225万円ほぼ確定
+- 今日のハイライト: X社向け研修の受注ほぼ確定
 - パターン: 月曜は会議が10件超で最多（3週連続）
-- 未解決: freeeセミナー返信
+- 未解決: セミナー打合せ返信
 
 ## Thoughts
 <!-- 自分で一言 -->

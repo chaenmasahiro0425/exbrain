@@ -27,6 +27,6 @@
 | コンテンツ | パターン | 例 |
 |-----------|---------|-----|
 | デイリーノート | `YYYY-MM-DD.md` | `2026-04-07.md` |
-| 議事録 | `YYYY-MM-DD_<顧客>_<種別>.md` | `2026-04-07_naoru_定例.md` |
+| 議事録 | `YYYY-MM-DD_<顧客>_<種別>.md` | `2026-04-07_client-a_meeting.md` |
 | 判断ログ | `YYYY-MM_<テーマ>.md` | `2026-04_料金改定.md` |
-| 顧客 | `<kebab-case>.md` | `naoru.md` |
+| 顧客 | `<kebab-case>.md` | `client-a.md` |

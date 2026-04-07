@@ -1,7 +1,7 @@
 #!/bin/bash
-# sync-openclaw-to-vault.sh — OpenClawのJSON → vault/daily/ に追記
-# Usage: bash sync-openclaw-to-vault.sh [morning|evening]
-# OpenClaw cron: 07:30 (morning), 18:30 (evening)
+# sync-agent-to-vault.sh — 外部AIエージェントのJSON → vault/daily/ に追記
+# Usage: bash sync-agent-to-vault.sh [morning|evening]
+# External agent cron: 07:30 (morning), 18:30 (evening)
 # Cloud TaskがLayer 1でdaily noteを作成済み。このスクリプトはLayer 2でデータ追記。
 
 set +e
@@ -11,7 +11,7 @@ TODAY=$(date +%Y-%m-%d)
 WEEKDAY=$(date +%A)
 VAULT_DIR="$HOME/vault"
 DAILY_FILE="$VAULT_DIR/daily/$TODAY.md"
-JSON_FILE="$HOME/clawd/reports/data/daily/$TODAY.json"
+JSON_FILE="$HOME/agent-data/daily/$TODAY.json"
 LOG_FILE="$VAULT_DIR/.sync.log"
 
 log() {
@@ -30,7 +30,7 @@ trap 'rm -f "$LOCKFILE"' EXIT
 cd "$VAULT_DIR" && git pull --rebase origin main 2>/dev/null
 
 if [ ! -f "$JSON_FILE" ]; then
-  log "JSON not found: $JSON_FILE (OpenClaw may not have generated yet)"
+  log "JSON not found: $JSON_FILE (Agent data not generated yet)"
   exit 0
 fi
 
@@ -76,7 +76,7 @@ if not os.path.exists(daily_file):
 
 content = open(daily_file).read()
 
-# OpenClaw専用データを追記セクションとして構築
+# 外部エージェント専用データを追記セクションとして構築
 enrich_lines = []
 
 # Salesforce
@@ -127,7 +127,7 @@ if mode == 'evening':
                 ev_lines.append(f'- {h.get("emoji","")} {h.get("text","")}')
     ev_text = '\n'.join(ev_lines)
     content = content.replace(
-        '<!-- sync-openclaw-to-vault.sh evening が自動追記 -->',
+        '<!-- sync-agent-to-vault.sh evening が自動追記 -->',
         ev_text
     )
 
@@ -150,7 +150,7 @@ if mode == 'evening':
         t_lines.append(advice)
     t_text = '\n'.join(t_lines)
     content = content.replace(
-        '<!-- sync-openclaw-to-vault.sh evening が自動生成 -->',
+        '<!-- sync-agent-to-vault.sh evening が自動生成 -->',
         t_text
     )
 
@@ -161,7 +161,7 @@ print(f'{mode} enrichment done: {daily_file}')
 PYEOF
 
 # git commit & push
-cd "$VAULT_DIR" && git add "daily/$TODAY.md" && git commit -m "enrich: $TODAY $MODE (OpenClaw data)" 2>/dev/null && git push 2>/dev/null
+cd "$VAULT_DIR" && git add "daily/$TODAY.md" && git commit -m "enrich: $TODAY $MODE (agent data)" 2>/dev/null && git push 2>/dev/null
 
 log "Completed $MODE sync"
 exit 0

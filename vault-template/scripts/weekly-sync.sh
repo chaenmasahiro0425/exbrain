@@ -58,7 +58,9 @@ echo "--- Counting CLAUDE.md files ---"
 CLAUDE_COUNT=0
 while IFS= read -r -d '' _f; do
   CLAUDE_COUNT=$((CLAUDE_COUNT + 1))
-done < <(find "$HOME/work" "$HOME/dev" "$HOME/content" -name "CLAUDE.md" -print0 2>/dev/null)
+# Customize these directories to match your folder structure
+SEARCH_DIRS=("$HOME/work" "$HOME/dev" "$HOME/content")
+done < <(find "${SEARCH_DIRS[@]}" -name "CLAUDE.md" -print0 2>/dev/null)
 
 echo "[$(date '+%F %T')] weekly-sync done: $IC issues, $CLAUDE_COUNT CLAUDE.md files" >> "$LOG"
 
