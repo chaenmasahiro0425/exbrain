@@ -1,8 +1,10 @@
-# Claude Code × Obsidian Wiki — Your AI Remembers, Reflects, and Evolves
+# Exbrain — Your AI's External Brain
 
-> AIが勝手に記憶し、整理し、毎朝振り返ってくれるナレッジシステム
+> AIが勝手に記憶し、整理し、毎朝振り返ってくれる外付け脳
 >
-> Inspired by [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) + the Dreaming pattern
+> Claude Code × Obsidian × SOUL/MEMORY/DREAMS
+>
+> Inspired by [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
 
 Claude Codeの中に眠っている記憶（Memory）、設定ファイル（CLAUDE.md）、スキル（Skills）を
 Obsidianで可視化し、毎朝・毎夕のDreamingで自動振り返りを行う仕組み。
