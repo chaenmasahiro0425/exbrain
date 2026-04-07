@@ -1,221 +1,222 @@
 # Exbrain — Your AI's External Brain
 
-> AIが勝手に記憶し、整理し、毎朝振り返ってくれる外付け脳
+> An AI knowledge system that automatically remembers, organizes, and reflects.
 >
 > Claude Code × Obsidian × SOUL/MEMORY/DREAMS
 >
 > Inspired by [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
 
-Claude Codeの中に眠っている記憶（Memory）、設定ファイル（CLAUDE.md）、スキル（Skills）を
-Obsidianで可視化し、毎朝・毎夕のDreamingで自動振り返りを行う仕組み。
+## What is Exbrain?
 
-PC閉じてても動く。iPhoneからも見える。人間はObsidianを開いて読むだけ。
+Exbrain turns Claude Code's hidden internal state — Memory files, CLAUDE.md configs, Skills — into a human-readable Obsidian vault. It adds a **Dreaming** layer that automatically reflects on your day, detects patterns, and builds a growth trajectory over time.
 
-## コンセプト
+Your laptop can be closed. Your phone shows everything. You just open Obsidian and read.
+
+## The SOUL / MEMORY / DREAMS Trinity
+
+The core of Exbrain is three files at the root of your vault:
 
 ```
-┌─ Claude Code の世界（普段は .claude/ に隠れている）───────────┐
+~/vault/
+├── SOUL.md      ← WHO you are (identity, values, boundaries)
+├── MEMORY.md    ← WHAT you've experienced (decisions, patterns, lessons)
+└── DREAMS.md    ← WHERE you're going (insights, growth, open questions)
+```
+
+### SOUL.md — Identity
+
+Defines who you are and how the AI should behave. Merged from Claude Code's CLAUDE.md and any external agent personality configs.
+
+```markdown
+## Identity
+- Your name, role, company
+
+## Values
+- "Ship fast, iterate later"
+- "API-first, no manual work"
+
+## Boundaries (non-negotiable)
+- "Never send emails — drafts only"
+- "Never post to Slack without confirmation"
+
+## Tech Ecosystem
+- APIs, MCP servers, CLI tools
+```
+
+### MEMORY.md — Experience
+
+A digest of everything the AI has learned. Auto-synced from Claude Code's Memory (`.claude/projects/*/memory/`) + enriched by Cloud Scheduled Tasks.
+
+```markdown
+## Recent
+- [2026-04-07] Built Obsidian vault with SOUL/MEMORY/DREAMS
+- [2026-04-06] Company A training deal almost closed
+
+## Decisions
+- Hybrid design: static mirror + Karpathy pattern + Dreaming
+
+## Patterns
+- Fridays are meeting-heavy (3 weeks in a row)
+- Email replies concentrate in the afternoon
+
+## CC Memory Summary (35 files)
+- feedback/21: "Never send emails", "Always git commit after GAS edits"
+- reference/7: API locations, tool configs
+- project/4: Active project statuses
+- user/1: User profile and preferences
+```
+
+### DREAMS.md — Reflection
+
+Updated automatically by Dreaming (morning + evening + weekly). Tracks patterns that emerge over time.
+
+```markdown
+## Current Insights
+- Meeting density peaks on Mondays (10+ meetings, 3 consecutive weeks)
+
+## Emerging Patterns
+| Pattern | Count | Trend |
+|---------|-------|-------|
+| Tool → Skill → Automation cycle | 10+ | Consistent |
+| Email/Slack send caution | 5+ | Critical boundary |
+
+## Growth Trajectory
+- Q1: 26 skills built, 32 cron jobs running, SF revenue 210%
+
+## Open Questions
+- Should CC Memory duplicates be consolidated?
+```
+
+## Architecture
+
+```
+┌─ Layer 1: Cloud Scheduled Tasks (no PC needed) ────────────┐
 │                                                              │
-│   CLAUDE.md ×N   ←──┐                                      │
-│   CC Memory ×N   ←──┤── 自動同期 ──→  ~/vault/              │
-│   Skills ×N      ←──┤                  (Obsidian)           │
-│   Cron jobs      ←──┘                  人間が見る窓          │
+│  07:00  vault-daily-morning                                  │
+│  ├── Read SOUL.md (understand user context)                  │
+│  ├── Read MEMORY.md (recent decisions & patterns)            │
+│  ├── Google Calendar → today's schedule                      │
+│  ├── Slack → overnight highlights                            │
+│  ├── Gmail → important unread emails                         │
+│  ├── Morning Dreaming (yesterday's review → today's focus)   │
+│  ├── Update MEMORY.md Recent section                         │
+│  └── git push                                                │
 │                                                              │
-│   + 日記（daily/）は Obsidian にだけ存在                       │
-│   + Dreaming（朝夕の自動振り返り）で知見が複利で増える           │
+│  18:30  vault-daily-evening                                  │
+│  ├── Read SOUL.md + MEMORY.md + DREAMS.md                    │
+│  ├── Evening Dreaming (today + 7-day pattern detection)      │
+│  ├── Update MEMORY.md + DREAMS.md                            │
+│  ├── Sunday: weekly Dreaming + Lint + Slack notification      │
+│  └── git push                                                │
 │                                                              │
-└──────────────────────────────────────────────────────────────┘
-```
-
-### 3つの性格を持つハイブリッド設計
-
-```
-vault/
-├── system/, skills/, memory/
-│   → 静的ミラー（ダッシュボード）
-│   → Claude Codeの中身を自動同期、人間は読むだけ
-│   → <!-- SYNCED: DO NOT EDIT --> ヘッダー付き
-│
-├── daily/
-│   → 自動ログ + 手書き日記
-│   → Calendar + Slack + Gmail + AI Analysis
-│   → 朝夕2回のDreaming（パターン検出・振り返り）
-│
-└── meetings/, clients/, insights/
-    → Karpathyパターン（知識が複利で増える）
-    → 議事録を処理するたびに顧客ページに自動蓄積
-    → 12回の議事録を読み返す必要がない
-```
-
-## アーキテクチャ
-
-```
-┌─ Layer 1: Cloud Scheduled Tasks（PC不要）──────────────────┐
-│                                                             │
-│  毎朝 07:00  vault-daily-morning                            │
-│  ├── Google Calendar → 今日の予定                            │
-│  ├── Slack → 昨夜〜今朝のハイライト                           │
-│  ├── Gmail → 未読・重要メール                                │
-│  ├── Morning Dreaming（昨日の振り返り→今日の注目）            │
-│  └── GitHub push                                            │
-│                                                             │
-│  毎夕 18:30  vault-daily-evening                            │
-│  ├── Evening Dreaming（今日+7日分→パターン検出）             │
-│  ├── 日曜は週次Dreaming + Lint + Slack通知                   │
-│  └── GitHub push                                            │
-│                                                             │
-└──────────────────────┬──────────────────────────────────────┘
+└──────────────────────┬───────────────────────────────────────┘
                        │ push
                        ▼
-┌─ GitHub (private repo) ─────────────────────────────────────┐
-│  vault/ の全ファイル                                          │
-└──────────────────────┬──────────────────────────────────────┘
-                       │ pull (launchd 毎時)
+┌─ GitHub (private repo) ──────────────────────────────────────┐
+│  All vault files                                              │
+└──────────────────────┬───────────────────────────────────────┘
+                       │ pull (hourly via launchd)
                        ▼
-┌─ Layer 2: ローカル自動化 ───────────────────────────────────┐
-│                                                             │
-│  Claude Code Hooks (async: true)                            │
-│  ├── PostToolUse → ファイル変更をログ記録                      │
-│  └── Stop → セッション終了をdaily noteに自動追記              │
-│                                                             │
-│  External AI Agent Cron（PCオン時の追加データ）                         │
-│  ├── SF/Stripe/HERP/YouTube等の専門データ追記                 │
-│  └── PCオフなら単にスキップ（Layer 1だけで完成）               │
-│                                                             │
-└──────────────────────┬──────────────────────────────────────┘
-                       │ iCloud
+┌─ Layer 2: Local Automation ──────────────────────────────────┐
+│                                                               │
+│  Claude Code Hooks (async: true)                              │
+│  ├── PostToolUse → log file changes                           │
+│  └── Stop → append session end to daily note + MEMORY.md      │
+│                                                               │
+│  External Agent Cron (when PC is on)                          │
+│  ├── Additional data: Salesforce, Stripe, HERP, YouTube       │
+│  └── Skipped when PC is off (Layer 1 is self-sufficient)      │
+│                                                               │
+└──────────────────────┬───────────────────────────────────────┘
+                       │ iCloud sync
                        ▼
               Obsidian (Mac + iPhone)
 ```
 
-## AIの記憶システム（Memory）
-
-Claude Codeは `.claude/projects/*/memory/` に記憶を保存する。
-この記憶がObsidianに自動ミラーされ、人間が読める形になる。
-
-```
-memory/
-├── feedback/ (21件) ← AIへの行動指針
-│   ├── never-send-email.md      「メール送信は絶対禁止。下書きのみ」
-│   ├── gas-version-control.md   「GAS編集後は毎回git commit」
-│   └── minutes-include-sf.md    「議事録にはSF+Slack報告も含める」
-│
-├── reference/ (7件) ← 外部システムへのポインタ
-│   ├── wordpress-api.md         「APIの認証情報はここ」
-│   └── typefully-api.md         「X投稿はTypefully経由」
-│
-├── project/ (4件)   ← プロジェクト状況
-│   └── project-status.md        「プロジェクトAは進行中、来月リリース」
-│
-└── user/ (1件)      ← ユーザープロファイル
-    └── user-profile.md          「シェル環境にまだ詳しくない」
-```
-
-AIが過去の失敗や指示を覚えていて、次から同じミスをしない。
-その記憶が全部Obsidianで見える。「何を覚えてるの？」が一目瞭然。
-
-## Dreaming（朝夕の自動振り返り）
-
-External AI AgentのSOUL/MEMORY/DREAMSパターンを参考に設計。
-
-```
-毎朝 07:00 — Morning Dreaming
-├── 昨日のdaily noteを読み返す
-├── 決定事項・未解決タスクを抽出
-└── 「今日の注目ポイント」を3行で生成
-
-毎夕 18:30 — Evening Dreaming
-├── 今日のSlack/Gmail/Calendarを振り返り
-├── 直近7日とのパターン比較
-│   例: 「火曜は会議密度が高い（3週連続）」
-│   例: 「メール返信が午後に集中」
-├── 未解決の問いを抽出
-└── パターンが見つかったら insights/ にページ作成
-
-毎週日曜 — Weekly Dreaming
-├── 1週間分のdailyから洞察を抽出
-├── DREAMS.md に成長軌跡を記録
-├── Lint（壊れたリンク・orphanページ検出）
-└── Slackでサマリー通知
-```
-
-DREAMS.mdに蓄積される内容:
-- Current Insights（最新の内省結果）
-- Emerging Patterns（浮かび上がるパターン）
-- Growth Trajectory（成長の軌跡）
-- Open Questions（未解決の問い）
-
-## Vault構造
+## Vault Structure
 
 ```
 ~/vault/
-├── CLAUDE.md              ← Schema（LLM向けルール定義）
-├── DREAMS.md              ← Dreaming蓄積ファイル
+├── SOUL.md                ← Identity, values, boundaries
+├── MEMORY.md              ← Experience digest (CC Memory mirror)
+├── DREAMS.md              ← Dreaming accumulation (auto-updated)
+├── CLAUDE.md              ← Schema (LLM rules for this vault)
 │
-├── daily/                 ← デイリーノート
-│   └── 2026-04-07.md      　 Schedule / Gmail / Slack / AI Analysis /
+├── daily/                 ← Daily notes (auto-generated morning & evening)
+│   └── 2026-04-07.md         Schedule / Gmail / Slack / AI Analysis /
 │                              Morning Reflection / Evening Reflection /
 │                              Claude Code Session / Thoughts
 │
-├── system/                ← Claude Codeシステムのミラー（SYNCED）
-│   ├── claude-md-tree.md  　 全CLAUDE.mdの階層ツリー
-│   ├── global-rules.md    　 ルール・禁止事項の要約
-│   ├── api-inventory.md   　 保有API一覧（キーは除外）
-│   ├── tech-stack.md      　 技術スタック
-│   └── cron-jobs.md       　 稼働中ジョブ一覧
+├── system/                ← Claude Code system mirror (SYNCED)
+│   ├── claude-md-tree.md     All CLAUDE.md files as a tree
+│   ├── global-rules.md       Rules & boundaries summary
+│   ├── api-inventory.md      API list (no keys)
+│   ├── tech-stack.md         Technology stack
+│   └── cron-jobs.md          Running cron jobs
 │
-├── skills/                ← 全スキル一覧 + 個別ページ（SYNCED）
-│   ├── _index.md          　 カテゴリ別テーブル
-│   └── auto-minutes.md    　 各スキルの説明・コマンド
+├── skills/                ← All skills with details (SYNCED)
+├── memory/                ← CC Memory individual file mirror (SYNCED)
+│   ├── feedback/             Behavioral guidelines
+│   ├── reference/            External system pointers
+│   ├── project/              Project statuses
+│   └── user/                 User profile
 │
-├── memory/                ← CC Memory完全ミラー（SYNCED）
-│   ├── _index.md          　 全メモリ一覧（タイプ別）
-│   ├── feedback/          　 行動指針
-│   ├── reference/         　 外部参照
-│   ├── project/           　 プロジェクト状況
-│   └── user/              　 ユーザープロファイル
-│
-├── clients/               ← 顧客ナレッジ蓄積（Karpathyパターン）
-│   ├── _index.md          　 全顧客一覧
-│   └── client-a.md           　 議事録のたびに自動蓄積
-│
-├── meetings/              ← 議事録要点（/auto-minutes連携）
-├── decisions/             ← 経営判断ログ
-├── insights/              ← 学び・パターン + 週次Dreaming
+├── clients/               ← Client knowledge (Karpathy pattern)
+├── meetings/              ← Meeting summaries (auto from /auto-minutes)
+├── decisions/             ← Decision log
+├── insights/              ← Learnings + weekly Dreaming
 ├── templates/             ← daily-note, meeting, decision
-└── scripts/               ← hookスクリプト + 同期スクリプト
+└── scripts/               ← Hook scripts + sync scripts
 ```
 
-## セットアップ手順
+## Hybrid Design: Three Personalities
 
-### 前提条件
-- Claude Code（Pro or Max）
-- Obsidian（無料）
-- GitHub アカウント
-- （オプション）Slack / Google Calendar / Gmail の Connector
+```
+vault/
+├── system/, skills/, memory/
+│   → Static mirror (dashboard)
+│   → Auto-synced from Claude Code, read-only
+│   → <!-- SYNCED: DO NOT EDIT --> header
+│
+├── daily/
+│   → Auto log + handwritten diary
+│   → Calendar + Slack + Gmail + AI Analysis + Dreaming
+│   → Runs even with PC closed (Cloud Scheduled Tasks)
+│
+└── meetings/, clients/, insights/
+    → Karpathy pattern (compounding knowledge)
+    → Each meeting processed → client page auto-enriched
+    → No need to re-read 12 meeting transcripts
+```
 
-### Step 1: Vault作成
+## Setup
+
+### Prerequisites
+- Claude Code (Pro or Max)
+- Obsidian (free)
+- GitHub account
+- (Optional) Slack / Google Calendar / Gmail Connectors
+
+### Step 1: Create Vault
 
 ```bash
-# フォルダ作成
 mkdir -p ~/vault/{daily,system,skills,memory/{feedback,reference,project,user},clients,meetings,decisions,insights,templates,scripts}
 
-# iCloud同期（iPhone対応する場合）
-mv ~/vault ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/claude-code
-ln -s ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/claude-code ~/vault
+# iCloud sync (for iPhone)
+mv ~/vault ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/exbrain
+ln -s ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/exbrain ~/vault
 ```
 
-### Step 2: テンプレートファイルをコピー
-
-このリポジトリの `vault-template/` をコピー:
+### Step 2: Copy Templates
 
 ```bash
-cp -r vault-template/* ~/vault/
+git clone https://github.com/chaenmasahiro0425/exbrain.git /tmp/exbrain
+cp -r /tmp/exbrain/vault-template/* ~/vault/
 ```
 
-### Step 3: Claude Code Hooks 設定
+### Step 3: Configure Hooks
 
-`~/.claude/settings.json` に追加:
+Add to `~/.claude/settings.json`:
 
 ```json
 {
@@ -239,30 +240,16 @@ cp -r vault-template/* ~/vault/
 }
 ```
 
-### Step 4: 初回同期
+### Step 4: Initial Sync
 
-Claude Codeで実行:
-
+In Claude Code:
 ```
-/wiki-sync-init
-```
-
-または手動:
-
-```bash
-# Skills同期
-for d in ~/.claude/skills/*/; do
-  name=$(basename "$d")
-  # SKILL.md を読んで vault/skills/ にページ作成
-done
-
-# Memory同期
-find ~/.claude/projects -name "*.md" -path "*/memory/*" ! -name "MEMORY.md" | while read src; do
-  # vault/memory/ にミラー作成
-done
+Please read all my skills from ~/.claude/skills/, all memory files from
+~/.claude/projects/*/memory/, and sync them to ~/vault/. Create SOUL.md
+with my identity and MEMORY.md with a digest of all memories.
 ```
 
-### Step 5: GitHub + 自動pull
+### Step 5: GitHub Backup
 
 ```bash
 cd ~/vault
@@ -270,13 +257,13 @@ git init && git add -A && git commit -m "Initial vault"
 gh repo create my-vault --private --source=. --push
 ```
 
-### Step 6: Cloud Scheduled Tasks（オプション、PC不要にする場合）
+### Step 6: Cloud Scheduled Tasks (PC-free automation)
 
-claude.ai/code/scheduled で:
-- **vault-daily-morning**: 毎朝07:00、Calendar+Slack+Gmail→daily note生成
-- **vault-daily-evening**: 毎夕18:30、Evening Dreaming+パターン検出
+At [claude.ai/code/scheduled](https://claude.ai/code/scheduled):
+- **vault-daily-morning** (07:00): Read SOUL.md → Calendar + Slack + Gmail → daily note + Morning Dreaming
+- **vault-daily-evening** (18:30): Read SOUL.md + MEMORY.md + DREAMS.md → Evening Dreaming + pattern detection
 
-## デイリーノートの完成形
+## Daily Note Example
 
 ```markdown
 ---
@@ -287,47 +274,53 @@ score: 74
 ---
 
 ## Schedule
-| 時間 | 予定 | 備考 |
-|------|------|------|
-| 09:00 | 経営管理部 定例 | |
-| 10:00 | 開発営業 定例 | |
-| 14:00 | 社内定例 | |
+| Time | Event | Note |
+|------|-------|------|
+| 09:00 | Management meeting | |
+| 10:00 | Sales standup | |
+| 14:00 | Company standup | |
 
 ## Gmail
 | From | Subject | Action |
 |------|---------|--------|
-| 田中太郎 | セミナー開催打合せ | 要返信 |
+| Tanaka | Seminar meeting request | Reply needed |
 
 ## Slack Highlights
-- **#general**: 組織体制の議論
-- **#sales**: チャットbot進捗、CRM連携デモ依頼
-- **#daily-report**: X社向け研修の受注ほぼ確定
-
-## AI Analysis
-- 生産性: B — 会議完了率100%
-- 対応力: B — 未読メール6件
-- 営業: B- — 商談0件
+- **#general**: Organization restructuring discussion
+- **#sales**: Chatbot progress, CRM demo request
+- **#daily-report**: Company X training deal almost closed
 
 ## Morning Reflection
-- 昨日の決定: サービス料金改定を決定
-- 今日の注目: セミナー返信、パートナーMTG
+- Yesterday's decision: Service pricing revision
+- Today's focus: Seminar reply, partner meeting
 
 ## Evening Reflection
-- 今日のハイライト: X社向け研修の受注ほぼ確定
-- パターン: 月曜は会議が10件超で最多（3週連続）
-- 未解決: セミナー打合せ返信
+- Highlight: Company X training deal confirmed
+- Pattern: Mondays consistently have 10+ meetings (3 weeks)
+- Unresolved: Seminar meeting reply pending
 
 ## Thoughts
-<!-- 自分で一言 -->
+<!-- Write your own reflection here -->
 ```
 
-## 参考
+## Scripts Included
 
-- [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) — 設計思想の原点
-- [obsidian-wiki (Ar9av)](https://github.com/Ar9av/obsidian-wiki) — Karpathyパターンのフレームワーク
-- [QMD](https://github.com/tobi/qmd) — Markdownセマンティック検索（100ページ超で導入検討）
-- [Claude Code Hooks](https://code.claude.com/docs/en/hooks-guide) — async hookの公式ドキュメント
-- [Cloud Scheduled Tasks](https://code.claude.com/docs/en/web-scheduled-tasks) — PC不要の自動化
+| Script | Purpose |
+|--------|---------|
+| `on-session-end.sh` | Stop hook: appends session summary to daily note + MEMORY.md |
+| `on-file-change.sh` | PostToolUse hook: logs CLAUDE.md/memory/skill changes |
+| `weekly-sync.sh` | Weekly lint: broken links, orphan pages, stale content |
+| `git-pull-sync.sh` | Hourly git pull with stash handling |
+| `sync-agent-to-vault.sh` | Enriches daily notes from external agent JSON data |
+
+All scripts are macOS-compatible (no GNU extensions), reviewed for security (no shell injection, PID-based locking instead of flock).
+
+## References
+
+- [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) — The original pattern
+- [Claude Code Hooks](https://code.claude.com/docs/en/hooks-guide) — async hook documentation
+- [Cloud Scheduled Tasks](https://code.claude.com/docs/en/web-scheduled-tasks) — PC-free automation
+- [QMD](https://github.com/tobi/qmd) — Markdown semantic search (for 100+ pages)
 
 ## License
 
