@@ -55,11 +55,11 @@ done < <(find "$VAULT" -name "*.md" -not -path "*/templates/*" -not -path "*/.ob
 
 # 5. CLAUDE.mdの総数をカウント
 echo "--- Counting CLAUDE.md files ---"
+# Customize these directories to match your folder structure
+SEARCH_DIRS=("$HOME/work" "$HOME/dev" "$HOME/content")
 CLAUDE_COUNT=0
 while IFS= read -r -d '' _f; do
   CLAUDE_COUNT=$((CLAUDE_COUNT + 1))
-# Customize these directories to match your folder structure
-SEARCH_DIRS=("$HOME/work" "$HOME/dev" "$HOME/content")
 done < <(find "${SEARCH_DIRS[@]}" -name "CLAUDE.md" -print0 2>/dev/null)
 
 echo "[$(date '+%F %T')] weekly-sync done: $IC issues, $CLAUDE_COUNT CLAUDE.md files" >> "$LOG"

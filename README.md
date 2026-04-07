@@ -50,7 +50,7 @@ A digest of everything the AI has learned. Auto-synced from Claude Code's Memory
 ```markdown
 ## Recent
 - [2026-04-07] Built Obsidian vault with SOUL/MEMORY/DREAMS
-- [2026-04-06] Company A training deal almost closed
+- [2026-04-06] Shipped new feature for Project Alpha
 
 ## Decisions
 - Hybrid design: static mirror + Karpathy pattern + Dreaming
@@ -81,7 +81,7 @@ Updated automatically by Dreaming (morning + evening + weekly). Tracks patterns 
 | Email/Slack send caution | 5+ | Critical boundary |
 
 ## Growth Trajectory
-- Q1: 26 skills built, 32 cron jobs running, SF revenue 210%
+- Q1: Built 26 skills, automated 32 cron jobs
 
 ## Open Questions
 - Should CC Memory duplicates be consolidated?
@@ -210,7 +210,7 @@ ln -s ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/exbrain ~/vault
 ### Step 2: Copy Templates
 
 ```bash
-git clone https://github.com/chaenmasahiro0425/exbrain.git /tmp/exbrain
+git clone https://github.com/YOUR_USERNAME/exbrain.git /tmp/exbrain
 cp -r /tmp/exbrain/vault-template/* ~/vault/
 ```
 
@@ -283,21 +283,21 @@ score: 74
 ## Gmail
 | From | Subject | Action |
 |------|---------|--------|
-| Tanaka | Seminar meeting request | Reply needed |
+| [Contact] | Project meeting request | Reply needed |
 
 ## Slack Highlights
 - **#general**: Organization restructuring discussion
-- **#sales**: Chatbot progress, CRM demo request
-- **#daily-report**: Company X training deal almost closed
+- **#sales**: New lead from inbound campaign
+- **#daily-report**: Project Beta milestone reached
 
 ## Morning Reflection
-- Yesterday's decision: Service pricing revision
-- Today's focus: Seminar reply, partner meeting
+- Yesterday's decision: Revised product roadmap
+- Today's focus: Follow up on pending proposals
 
 ## Evening Reflection
-- Highlight: Company X training deal confirmed
+- Highlight: Project Beta milestone reached
 - Pattern: Mondays consistently have 10+ meetings (3 weeks)
-- Unresolved: Seminar meeting reply pending
+- Unresolved: Partner meeting follow-up
 
 ## Thoughts
 <!-- Write your own reflection here -->
@@ -318,8 +318,8 @@ All scripts are macOS-compatible (no GNU extensions), reviewed for security (no 
 ## References
 
 - [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) — The original pattern
-- [Claude Code Hooks](https://code.claude.com/docs/en/hooks-guide) — async hook documentation
-- [Cloud Scheduled Tasks](https://code.claude.com/docs/en/web-scheduled-tasks) — PC-free automation
+- [Claude Code Hooks](https://docs.anthropic.com/en/docs/claude-code/hooks) — async hook documentation
+- [Cloud Scheduled Tasks](https://docs.anthropic.com/en/docs/claude-code/scheduled-tasks) — PC-free automation
 - [QMD](https://github.com/tobi/qmd) — Markdown semantic search (for 100+ pages)
 
 ## License
