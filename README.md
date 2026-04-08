@@ -1,10 +1,14 @@
-# Exbrain — Your AI's External Brain
+<p align="center">
+  <img src="assets/banner.png" alt="Exbrain Banner" width="800">
+</p>
 
-> An AI knowledge system that automatically remembers, organizes, and reflects.
->
-> Claude Code × Obsidian × SOUL/MEMORY/DREAMS
->
-> Inspired by [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
+<h1 align="center">Exbrain — Your AI's External Brain</h1>
+
+<p align="center">
+  <b>An AI knowledge system that automatically remembers, organizes, and reflects.</b><br>
+  Claude Code × Obsidian × SOUL/MEMORY/DREAMS<br><br>
+  <a href="README_JP.md">🇯🇵 日本語版はこちら</a> · Inspired by <a href="https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f">Karpathy's LLM Wiki</a>
+</p>
 
 ## What is Exbrain?
 
