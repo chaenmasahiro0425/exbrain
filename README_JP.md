@@ -2,10 +2,10 @@
   <img src="assets/banner.png" alt="Exbrain Banner" width="800">
 </p>
 
-<h1 align="center">Exbrain — AIの外付け脳</h1>
+<h1 align="center">Exbrain — 自律成長する外付けのAI脳</h1>
 
 <p align="center">
-  <b>AIが勝手に記憶し、整理し、毎朝振り返ってくれるナレッジシステム</b><br>
+  <b>記憶し、整理し、振り返り、自ら進化するAIナレッジシステム</b><br>
   Claude Code × Obsidian × SOUL/MEMORY/DREAMS<br><br>
   <a href="README.md">🇺🇸 English</a> · <a href="https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f">Karpathy's LLM Wiki</a> にインスパイア
 </p>
