@@ -16,6 +16,136 @@ Exbrain turns Claude Code's hidden internal state — Memory files, CLAUDE.md co
 
 Your laptop can be closed. Your phone shows everything. You just open Obsidian and read.
 
+## How It Works — For Beginners
+
+If you're new to Claude Code or Obsidian, here's the big picture:
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                    YOU (Human)                                │
+│                                                              │
+│   Work with Claude Code    Bookmark on X    Send URL in Slack│
+│         ↓                      ↓                  ↓          │
+└─────────┬──────────────────────┬──────────────────┬──────────┘
+          │                      │                  │
+          ▼                      ▼                  ▼
+┌─────────────────┐  ┌───────────────────┐  ┌──────────────────┐
+│  Claude Code    │  │  Cron Job (Auto)  │  │  Always-On Agent │
+│  (Local CLI)    │  │  Every 4 hours    │  │  (e.g. OpenClaw) │
+│                 │  │                   │  │                  │
+│ • /clip skill   │  │ • X bookmark sync │  │ • Slack listener │
+│ • Hooks (auto)  │  │ • xurl API        │  │ • URL detection  │
+│ • Session logs  │  │                   │  │ • firecrawl      │
+└────────┬────────┘  └────────┬──────────┘  └────────┬─────────┘
+         │                    │                      │
+         └────────────────────┼──────────────────────┘
+                              │
+                              ▼
+                 ┌──────────────────────┐
+                 │   ~/vault/ (Git)     │
+                 │                      │
+                 │  SOUL.md   MEMORY.md │
+                 │  DREAMS.md           │
+                 │  daily/  clips/      │
+                 │  clients/ insights/  │
+                 └──────────┬───────────┘
+                            │
+                   ┌────────┼────────┐
+                   │        │        │
+                   ▼        ▼        ▼
+                GitHub   iCloud   Obsidian
+                (backup) (sync)   (Mac+iPhone)
+```
+
+### Components Explained
+
+| Component | What it is | Role in Exbrain |
+|-----------|-----------|-----------------|
+| **Claude Code** | Anthropic's AI coding CLI ([docs](https://docs.anthropic.com/en/docs/claude-code)) | Your main AI assistant. Runs skills like `/clip`, writes to vault, manages hooks |
+| **Obsidian** | Free markdown note app ([obsidian.md](https://obsidian.md)) | Where you **read** everything. Vault = folder of .md files. Works on Mac, iPhone, Android |
+| **Always-On Agent** | A background AI (e.g. [OpenClaw](https://openclaw.com)) | Monitors Slack/Discord 24/7. Runs cron jobs even when Claude Code is closed |
+| **Cloud Scheduled Tasks** | Claude Code's built-in scheduler ([docs](https://docs.anthropic.com/en/docs/claude-code/scheduled-tasks)) | Runs morning/evening Dreaming without your PC. Updates MEMORY.md and DREAMS.md |
+| **xurl** | X API CLI tool | Fetches tweets and bookmarks from X (Twitter) |
+| **Firecrawl** | Web scraping CLI | Converts any URL into clean markdown |
+| **iCloud** | Apple's cloud sync | Syncs vault between Mac and iPhone automatically |
+| **GitHub** | Code hosting | Backup + version history for your vault |
+
+### Data Flow: What Happens When You Clip
+
+```
+You find an interesting article
+         │
+         ▼
+  ┌─ Pick your method ──────────────────────────────────┐
+  │                                                      │
+  │  A) /clip URL          B) Slack DM         C) Just  │
+  │     in Claude Code        send URL         bookmark │
+  │         │                    │              on X     │
+  │         ▼                    ▼                │      │
+  │    Claude Code          Agent detects    (wait 4h)   │
+  │    runs instantly       URL in real-time      │      │
+  └──────┬───────────────────┬───────────────────┬──────┘
+         │                   │                   │
+         └───────────────────┼───────────────────┘
+                             │
+                             ▼
+                   ┌─────────────────┐
+                   │  AI Processing  │
+                   │                 │
+                   │ 1. Fetch content│
+                   │ 2. Summarize    │
+                   │ 3. Tag (auto)   │
+                   │ 4. Save .md     │
+                   └────────┬────────┘
+                            │
+                            ▼
+               vault/clips/x/2026-04-08_slug.md
+                            │
+                  ┌─────────┼─────────┐
+                  │         │         │
+                  ▼         ▼         ▼
+            _index.md   daily note   git push
+            updated     updated      to GitHub
+                                        │
+                                        ▼
+                                   iCloud sync
+                                        │
+                                        ▼
+                                 📱 Read on iPhone
+```
+
+### System Relationship Map
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                                                         │
+│  ┌──────────────┐         ┌──────────────┐              │
+│  │ Claude Code  │────────▶│  ~/vault/    │◀──────┐      │
+│  │ (CLI agent)  │ writes  │ (Obsidian)   │       │      │
+│  │              │         │              │  writes│      │
+│  │ Skills:      │         │ SOUL.md      │       │      │
+│  │  /clip       │         │ MEMORY.md    │  ┌────┴────┐ │
+│  │  /auto-min   │         │ DREAMS.md    │  │ Cloud   │ │
+│  │  30+ more    │         │ daily/       │  │Schedule │ │
+│  └──────────────┘         │ clips/       │  │ Tasks   │ │
+│                           │ clients/     │  │         │ │
+│  ┌──────────────┐         │ meetings/    │  │ Morning │ │
+│  │ Always-On    │────────▶│ insights/    │  │ Evening │ │
+│  │ Agent        │ writes  │              │  └─────────┘ │
+│  │ (OpenClaw)   │         └──────┬───────┘              │
+│  │              │                │                      │
+│  │ Cron jobs:   │          git push/pull                │
+│  │  X bookmarks │                │                      │
+│  │  Slack DM    │         ┌──────▼───────┐              │
+│  │  Reports     │         │   GitHub     │              │
+│  └──────────────┘         │  (private)   │              │
+│                           └──────────────┘              │
+│                                                         │
+│          ─── All connected via ~/vault/ ───             │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
 ## The SOUL / MEMORY / DREAMS Trinity
 
 The core of Exbrain is three files at the root of your vault:
