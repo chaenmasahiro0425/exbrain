@@ -39,7 +39,8 @@ import os
 f = os.environ["DAILY_FILE"]
 e = os.environ["ENTRY"]
 
-lines = open(f).readlines()
+with open(f) as fh:
+    lines = fh.readlines()
 out = []
 in_log = False
 done = False
@@ -57,7 +58,8 @@ for l in lines:
 if in_log and not done:
     out.append(e + "\n\n")
 
-open(f, "w").writelines(out)
+with open(f, "w") as fh:
+    fh.writelines(out)
 ' 2>/dev/null || echo "$ENTRY" >> "$DAILY_FILE"
 
 exit 0

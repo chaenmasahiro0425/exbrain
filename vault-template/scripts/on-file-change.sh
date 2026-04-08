@@ -17,7 +17,7 @@ try:
     d = json.load(sys.stdin)
     ti = d.get('tool_input', d)
     print(ti.get('file_path', ti.get('path', '')))
-except:
+except (json.JSONDecodeError, AttributeError, TypeError, KeyError):
     print('')
 " 2>/dev/null || echo "")
 

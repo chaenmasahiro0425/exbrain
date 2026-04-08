@@ -431,7 +431,7 @@ vault/
 ├── skills/                ← スキル一覧+個別ページ（SYNCED）
 ├── memory/                ← CC Memory個別ファイルミラー（SYNCED）
 ├── clips/                 ← ツイート・記事のクリッピング（自動+手動）
-│   ├── x/                    Xブックマーク（毎日22:00自動同期）
+│   ├── x/                    Xブックマーク（4時間おき自動同期）
 │   ├── articles/             Web記事（/clip or Slack経由）
 │   ├── _index.md             クリップ一覧（自動更新）
 │   └── tags.md               タグ別分類（Dataview対応）
@@ -527,7 +527,7 @@ gh repo create my-vault --private --source=. --push
 | `weekly-sync.sh` | 週次Lint: 壊れたリンク・孤立ページ・古いページ検出 |
 | `git-pull-sync.sh` | 毎時git pull（stash対応） |
 | `sync-agent-to-vault.sh` | 外部エージェントのJSONデータでdaily note充実化 |
-| `sync-x-bookmarks.sh` | Xブックマーク自動取得+クリップ（cron 22:00） |
+| `sync-x-bookmarks.sh` | Xブックマーク自動取得+クリップ（4時間おき） |
 
 全スクリプトmacOS互換（GNU拡張なし）、セキュリティレビュー済み（PIDロック、インジェクション対策）。
 

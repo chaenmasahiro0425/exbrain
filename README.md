@@ -125,7 +125,7 @@ You find an interesting article
 │  │              │         │              │  writes│      │
 │  │ Skills:      │         │ SOUL.md      │       │      │
 │  │  /clip       │         │ MEMORY.md    │  ┌────┴────┐ │
-│  │  /auto-min   │         │ DREAMS.md    │  │ Cloud   │ │
+│  │  /auto-mins  │         │ DREAMS.md    │  │ Cloud   │ │
 │  │  30+ more    │         │ daily/       │  │Schedule │ │
 │  └──────────────┘         │ clips/       │  │ Tasks   │ │
 │                           │ clients/     │  │         │ │
@@ -447,13 +447,13 @@ Add a cron job to your agent scheduler:
 │   └── user/                 User profile
 │
 ├── clips/                 ← Clipped tweets & articles (auto + manual)
-│   ├── x/                    X bookmarks (auto-synced daily at 22:00)
+│   ├── x/                    X bookmarks (auto-synced every 4 hours)
 │   ├── articles/             Web articles (via /clip or Slack)
 │   ├── _index.md             Clip index (auto-updated)
 │   └── tags.md               Tag-based classification (Dataview)
 │
 ├── clients/               ← Client knowledge (Karpathy pattern)
-├── meetings/              ← Meeting summaries (auto from /auto-minutes)
+├── meetings/              ← Meeting summaries (auto from /auto-mins)
 ├── decisions/             ← Decision log
 ├── insights/              ← Learnings + weekly Dreaming
 ├── templates/             ← daily-note, meeting, decision
@@ -603,7 +603,7 @@ score: 74
 | `weekly-sync.sh` | Weekly lint: broken links, orphan pages, stale content |
 | `git-pull-sync.sh` | Hourly git pull with stash handling |
 | `sync-agent-to-vault.sh` | Enriches daily notes from external agent JSON data |
-| `sync-x-bookmarks.sh` | Auto-fetches X bookmarks + clips (cron 22:00) |
+| `sync-x-bookmarks.sh` | Auto-fetches X bookmarks + clips (every 4 hours) |
 
 All scripts are macOS-compatible (no GNU extensions), reviewed for security (no shell injection, PID-based locking instead of flock).
 

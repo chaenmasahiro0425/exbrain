@@ -53,7 +53,7 @@ USER_MAP=$(echo "$BOOKMARKS" | jq -r '[.includes.users[]? | {(.id): .username}] 
 # 各ブックマークを処理
 # スクリプト単体ではJSON出力のみ。要約・タグ生成はLLMが行う
 NEW_COUNT=0
-echo "$BOOKMARKS" | jq -c '.data[]' | while read -r tweet; do
+while read -r tweet; do
   TWEET_ID=$(echo "$tweet" | jq -r '.id')
   TWEET_TEXT=$(echo "$tweet" | jq -r '.text // empty')
   AUTHOR_ID=$(echo "$tweet" | jq -r '.author_id // "unknown"')
@@ -69,6 +69,6 @@ echo "$BOOKMARKS" | jq -c '.data[]' | while read -r tweet; do
   NEW_COUNT=$((NEW_COUNT + 1))
   log "New bookmark: $TWEET_ID by @$AUTHOR"
   echo "{\"id\":\"$TWEET_ID\",\"text\":$(echo "$TWEET_TEXT" | jq -Rs .),\"author\":\"@$AUTHOR\"}"
-done
+done < <(echo "$BOOKMARKS" | jq -c '.data[]')
 
 log "Sync complete (new: $NEW_COUNT)"

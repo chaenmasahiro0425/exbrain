@@ -1,3 +1,7 @@
+---
+type: schema
+---
+
 # Obsidian Vault Schema
 
 > このファイルはLLMがvaultを読み書きする際のルール定義。
