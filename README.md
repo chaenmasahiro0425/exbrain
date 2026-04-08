@@ -341,18 +341,18 @@ workspace/skills/slack-clip/
 2. **Add auto-action** to your agent's config (e.g., `AGENTS.md`):
 
 ```markdown
-### URL投稿 → Vaultクリップ
-DM にURLを含むメッセージが来たら自動でvault/clips/に保存。
+### URL Post → Vault Clip
+Automatically saves to vault/clips/ when a DM contains a URL.
 
-検知方法:
-- メッセージテキストに https:// を含む（転送メッセージは除外）
-- Slack内部URL、画像直リンクは除外
+Detection:
+- Message text contains https:// (forwarded messages excluded)
+- Slack internal URLs and direct image links excluded
 
-処理:
-1. URL種別判定（X tweet vs 記事）
-2. X tweet → xurl read / 記事 → firecrawl scrape
-3. 要約・タグ生成 → vault/clips/ に保存
-4. git push + スレッド返信で確認
+Processing:
+1. Detect URL type (X tweet vs article)
+2. X tweet → xurl read / article → firecrawl scrape
+3. Generate summary + tags → save to vault/clips/
+4. git push + thread reply confirmation
 ```
 
 3. **Ensure tools are available** to the agent:
