@@ -91,6 +91,54 @@ Updated automatically by Dreaming (morning + evening + weekly). Tracks patterns 
 - Should CC Memory duplicates be consolidated?
 ```
 
+## Clips — Knowledge Clipping
+
+Clips automatically captures tweets and articles into your vault. Like Karpathy's compounding knowledge pattern, everything you read accumulates and becomes searchable.
+
+### Three Ways to Clip
+
+| Method | Trigger | How it works |
+|--------|---------|--------------|
+| **`/clip` skill** | `/clip <URL>` in Claude Code | Detects X tweet vs article, fetches content, generates summary + tags, saves to `clips/` |
+| **X Bookmark Sync** | Daily cron (22:00) | Auto-fetches yesterday's X bookmarks via `xurl`, summarizes, saves to `clips/x/` |
+| **Slack/Discord** | Post URL in channel | External agent picks up URL, scrapes, saves to `clips/articles/` |
+
+### Clip File Format
+
+```markdown
+---
+date: 2026-04-08
+type: clip
+source: x | article
+url: https://...
+author: "@username"
+tags: [ai, claude-code, agent]
+---
+
+## Summary
+(3-5 line summary in your language)
+
+## Key Points
+- Point 1
+- Point 2
+
+## Notes
+> Important quotes
+
+## Related
+[[insights/...]] | [[clips/...]]
+```
+
+### Daily Note Integration
+
+Each clip is automatically linked in the day's daily note:
+
+```markdown
+## Clips
+- [[clips/x/2026-04-08_sam-altman-social-contract]] — Sam Altman's social contract
+- [[clips/articles/2026-04-08_karpathy-llm-wiki]] — Karpathy LLM Wiki pattern
+```
+
 ## Architecture
 
 ```
@@ -164,6 +212,12 @@ Updated automatically by Dreaming (morning + evening + weekly). Tracks patterns 
 │   ├── reference/            External system pointers
 │   ├── project/              Project statuses
 │   └── user/                 User profile
+│
+├── clips/                 ← Clipped tweets & articles (auto + manual)
+│   ├── x/                    X bookmarks (auto-synced daily at 22:00)
+│   ├── articles/             Web articles (via /clip or Slack)
+│   ├── _index.md             Clip index (auto-updated)
+│   └── tags.md               Tag-based classification (Dataview)
 │
 ├── clients/               ← Client knowledge (Karpathy pattern)
 ├── meetings/              ← Meeting summaries (auto from /auto-minutes)
@@ -316,6 +370,7 @@ score: 74
 | `weekly-sync.sh` | Weekly lint: broken links, orphan pages, stale content |
 | `git-pull-sync.sh` | Hourly git pull with stash handling |
 | `sync-agent-to-vault.sh` | Enriches daily notes from external agent JSON data |
+| `sync-x-bookmarks.sh` | Auto-fetches X bookmarks + clips (cron 22:00) |
 
 All scripts are macOS-compatible (no GNU extensions), reviewed for security (no shell injection, PID-based locking instead of flock).
 
