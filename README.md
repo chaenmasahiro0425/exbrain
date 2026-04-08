@@ -93,15 +93,57 @@ Updated automatically by Dreaming (morning + evening + weekly). Tracks patterns 
 
 ## Clips — Knowledge Clipping
 
-Clips automatically captures tweets and articles into your vault. Like Karpathy's compounding knowledge pattern, everything you read accumulates and becomes searchable.
+Clips automatically captures tweets and articles into your vault. Like Karpathy's compounding knowledge pattern, everything you read accumulates and becomes searchable in Obsidian.
 
 ### Three Ways to Clip
 
-| Method | Trigger | How it works |
-|--------|---------|--------------|
-| **`/clip` skill** | `/clip <URL>` in Claude Code | Detects X tweet vs article, fetches content, generates summary + tags, saves to `clips/` |
-| **X Bookmark Sync** | Daily cron (22:00) | Auto-fetches yesterday's X bookmarks via `xurl`, summarizes, saves to `clips/x/` |
-| **Slack/Discord** | Post URL in channel | External agent picks up URL, scrapes, saves to `clips/articles/` |
+| Method | Trigger | Best for |
+|--------|---------|----------|
+| **`/clip` skill** | `/clip <URL>` in Claude Code | Working at your desk, high-quality summaries |
+| **Slack DM** | Post URL in Slack DM to your agent | On the go (phone), instant capture |
+| **X Bookmark Sync** | Automatic every 4 hours | Passive — just bookmark on X, it syncs |
+
+### 1. `/clip` — Manual Clip in Claude Code
+
+```
+/clip https://x.com/karpathy/status/1234567890
+/clip https://example.com/great-article
+/clip https://url1.com https://url2.com          # multiple URLs
+```
+
+Detects X tweet vs article automatically. Fetches content, generates summary + tags in Japanese, saves to `clips/`, updates daily note, and pushes to git.
+
+### 2. Slack DM — Clip from Your Phone
+
+Just send a URL to your agent's Slack DM:
+
+```
+https://example.com/interesting-article
+```
+
+The agent detects the URL, scrapes the content, generates a summary, saves to `clips/`, and replies in a thread:
+
+```
+📎 Clipped!
+📄 How LLMs Will Change Everything
+🏷️ #ai #llm #future
+📁 vault/clips/articles/2026-04-08_llm-change-everything.md
+```
+
+**Setup**: Requires an always-on agent (like [OpenClaw](https://openclaw.com)) with Slack Socket Mode. Add the URL detection behavior to your agent's auto-actions. See [Slack Clip Setup](#slack-clip-setup) below.
+
+### 3. X Bookmark Auto-Sync
+
+Bookmark tweets on X as you normally would. A cron job syncs them to your vault automatically.
+
+**Default schedule**: Every 4 hours (8:00, 12:00, 16:00, 20:00)
+
+**Requirements**: [xurl](https://github.com/twitterdev/xurl) CLI with OAuth2 authentication.
+
+```bash
+# Test manually
+xurl bookmarks -n 5 --auth oauth2
+```
 
 ### Clip File Format
 
@@ -113,6 +155,7 @@ source: x | article
 url: https://...
 author: "@username"
 tags: [ai, claude-code, agent]
+via: slack | cli | cron          # how it was clipped
 ---
 
 ## Summary
@@ -137,6 +180,66 @@ Each clip is automatically linked in the day's daily note:
 ## Clips
 - [[clips/x/2026-04-08_sam-altman-social-contract]] — Sam Altman's social contract
 - [[clips/articles/2026-04-08_karpathy-llm-wiki]] — Karpathy LLM Wiki pattern
+```
+
+### Dataview Queries
+
+Browse clips by tag in Obsidian:
+
+```dataview
+TABLE rows.date, rows.source, rows.author
+FROM "clips"
+WHERE type = "clip"
+FLATTEN tags as tag
+GROUP BY tag
+SORT rows.date DESC
+```
+
+### Slack Clip Setup
+
+To enable Slack DM → clip, add this auto-action to your agent:
+
+1. **Create skill files** in your agent's workspace:
+
+```
+workspace/skills/slack-clip/
+├── SKILL.md          ← Skill overview
+├── BEHAVIOR.md       ← Detection rules + processing flow
+└── processed-clips.json  ← Deduplication tracking
+```
+
+2. **Add auto-action** to your agent's config (e.g., `AGENTS.md`):
+
+```markdown
+### URL投稿 → Vaultクリップ
+DM にURLを含むメッセージが来たら自動でvault/clips/に保存。
+
+検知方法:
+- メッセージテキストに https:// を含む（転送メッセージは除外）
+- Slack内部URL、画像直リンクは除外
+
+処理:
+1. URL種別判定（X tweet vs 記事）
+2. X tweet → xurl read / 記事 → firecrawl scrape
+3. 要約・タグ生成 → vault/clips/ に保存
+4. git push + スレッド返信で確認
+```
+
+3. **Ensure tools are available** to the agent:
+   - `xurl` (X API CLI) with OAuth2 auth
+   - `firecrawl` (web scraping CLI)
+   - Git access to your vault repo
+
+### X Bookmark Cron Setup
+
+Add a cron job to your agent scheduler:
+
+```json
+{
+  "name": "clip-x-bookmarks",
+  "schedule": "0 8-23/4 * * *",
+  "message": "Fetch X bookmarks with `xurl bookmarks -n 20 --auth oauth2`, check for duplicates in vault/clips/x/, summarize new ones, save to vault/clips/x/, update _index.md, git push."
+}
 ```
 
 ## Architecture
