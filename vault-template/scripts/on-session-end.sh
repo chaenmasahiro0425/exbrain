@@ -1,65 +1,28 @@
 #!/usr/bin/env bash
 # on-session-end.sh — Claude Code Stop hook
-# セッション終了時にdaily noteにサマリーを追記する
+# 役割（再設計 2026-06-14）:
+#   1) 本日の daily note が無ければ最小テンプレで作成（クラウドが後で enrich する）
+#   2) liveness を .sync.log に1行記録
+#   3) ローカル変更をクラウドへ双方向同期（デバウンス付き vault-sync.sh）
+# 旧版がやっていた「## Log への セッション終了 連打」と「MEMORY.md 直接追記」は撤去。
+#   理由: MEMORY/DREAMS/日報の enrich はクラウド認知パイプラインが所有する。
+#         ローカルが書くと (a) スパム化 (b) クラウド再生成と競合 を招くため。
 # 呼び出し元: ~/.claude/settings.json → hooks.Stop (async: true)
 set +e
 
-VAULT_DIR="$HOME/vault"
-DAILY_DIR="$VAULT_DIR/daily"
-LOG="$VAULT_DIR/.sync.log"
-TODAY=$(date +%Y-%m-%d)
-DAILY_FILE="$DAILY_DIR/$TODAY.md"
-NOW=$(date +%H:%M)
+VAULT="$HOME/vault"
+LOG="$VAULT/.sync.log"
+T=$(date +%Y-%m-%d)
+DAILY="$VAULT/daily/$T.md"
 
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] on-session-end" >> "$LOG"
+echo "[$(date '+%F %T')] session-end" >> "$LOG"
 
-# daily noteが存在しない場合は作成
-if [ ! -f "$DAILY_FILE" ]; then
-  WEEKDAY=$(TODAY="$TODAY" python3 -c "
-import os, datetime
-d = datetime.date.fromisoformat(os.environ['TODAY'])
-print(d.strftime('%A'))
-")
-  printf -- "---\ndate: %s\nweekday: %s\n---\n\n## Schedule\n\n## Log\n\n## Thoughts\n\n## Links\n" "$TODAY" "$WEEKDAY" > "$DAILY_FILE"
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] Created daily note: $DAILY_FILE" >> "$LOG"
+if [ ! -f "$DAILY" ]; then
+  WD=$(python3 -c "import datetime;print(datetime.date.today().strftime('%A'))" 2>/dev/null || echo "")
+  printf -- "---\ndate: %s\nweekday: %s\n---\n\n## Schedule\n\n## Sessions\n\n## Thoughts\n\n## Links\n" "$T" "$WD" > "$DAILY"
+  echo "[$(date '+%F %T')] created daily note (cloud will enrich)" >> "$LOG"
 fi
 
-# stdinからJSONを読み取る（hookから渡される）
-INPUT=$(cat 2>/dev/null || true)
-CWD=$(echo "${INPUT:-{}}" | python3 -c "import sys,json;print(json.load(sys.stdin).get('cwd',''))" 2>/dev/null || echo "")
-LABEL=$([ -n "$CWD" ] && basename "$CWD" || echo "unknown")
-
-ENTRY="- $NOW セッション終了 (cwd: $LABEL)"
-
-# ## Log セクションに追記（環境変数経由でPythonに渡す — シェル補間を避ける）
-export DAILY_FILE ENTRY
-python3 -c '
-import os
-
-f = os.environ["DAILY_FILE"]
-e = os.environ["ENTRY"]
-
-with open(f) as fh:
-    lines = fh.readlines()
-out = []
-in_log = False
-done = False
-
-for l in lines:
-    if l.strip() == "## Log":
-        in_log = True
-        out.append(l)
-        continue
-    if in_log and not done and l.startswith("## "):
-        out.append(e + "\n\n")
-        done = True
-    out.append(l)
-
-if in_log and not done:
-    out.append(e + "\n\n")
-
-with open(f, "w") as fh:
-    fh.writelines(out)
-' 2>/dev/null || echo "$ENTRY" >> "$DAILY_FILE"
-
+# ローカル→クラウド同期（バックグラウンド・デバウンス）
+( bash "$VAULT/scripts/vault-sync.sh" >/dev/null 2>&1 & )
 exit 0
