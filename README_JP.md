@@ -2,542 +2,275 @@
   <img src="assets/banner.png" alt="Exbrain Banner" width="800">
 </p>
 
-<h1 align="center">Exbrain — 自律成長する外付けのAI脳</h1>
+<h1 align="center">Exbrain 2.0 — 自律成長する外付けのAI脳</h1>
 
 <p align="center">
-  <b>記憶し、整理し、振り返り、自ら進化するAIナレッジシステム</b><br>
-  Claude Code × Obsidian × SOUL/MEMORY/DREAMS<br><br>
+  <b>記憶し、編纂し、検証し、自ら進化するAIナレッジシステム</b><br>
+  Claude Code × Obsidian × 4層アーキテクチャ<br><br>
   <a href="README.md">🇺🇸 English</a> · <a href="https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f">Karpathy's LLM Wiki</a> にインスパイア
 </p>
 
 ## Exbrainとは？
 
-Claude Codeの中に隠れている記憶（Memory）、設定ファイル（CLAUDE.md）、スキル（Skills）をObsidianで可視化。**Dreaming**レイヤーが自動で毎日振り返り、パターンを検出し、成長の軌跡を記録する。
+最強のAIモデルが平凡なアウトプットしか出さない理由はひとつ — **あなたのことを何も知らない**から。
 
-PCを閉じても動く。iPhoneでも見える。人間はObsidianを開いて読むだけ。
+Exbrainは、Claude Codeが読み書きする「外付けの脳」をObsidian（＝ただのMarkdownフォルダ）の上に作る。あなたの日々・顧客・意思決定・学びが自動で蓄積・編纂され、**すべてのセッションが「あなたの今」を知った状態で始まる**。
 
-## はじめに — 全体像を理解する
+- 記憶はあなたのディスクの上、プレーンテキスト。ベンダーロックインなし
+- PCを閉じても動く（クラウド側の自動タスク）。iPhoneでも読める（iCloud同期）
+- モデルが何に替わっても、脳は生き残る
 
-Claude CodeやObsidianに馴染みがない方のために、全体像を図で解説します。
+## v2で何が変わったか
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                    あなた（人間）                               │
-│                                                              │
-│   Claude Codeで作業     Xでブックマーク     SlackにURL送信     │
-│         ↓                    ↓                  ↓            │
-└─────────┬──────────────────────┬──────────────────┬──────────┘
-          │                      │                  │
-          ▼                      ▼                  ▼
-┌─────────────────┐  ┌───────────────────┐  ┌──────────────────┐
-│  Claude Code    │  │  Cronジョブ(自動) │  │  常駐エージェント  │
-│  (ローカルCLI)  │  │  4時間おき        │  │  (例: OpenClaw)   │
-│                 │  │                   │  │                  │
-│ • /clip スキル  │  │ • Xブックマーク   │  │ • Slack監視       │
-│ • Hooks(自動)   │  │ • xurl API        │  │ • URL検知         │
-│ • セッション記録│  │                   │  │ • firecrawl       │
-└────────┬────────┘  └────────┬──────────┘  └────────┬─────────┘
-         │                    │                      │
-         └────────────────────┼──────────────────────┘
-                              │
-                              ▼
-                 ┌──────────────────────┐
-                 │   ~/vault/ (Git)     │
-                 │                      │
-                 │  SOUL.md   MEMORY.md │
-                 │  DREAMS.md           │
-                 │  daily/  clips/      │
-                 │  clients/ insights/  │
-                 └──────────┬───────────┘
-                            │
-                   ┌────────┼────────┐
-                   │        │        │
-                   ▼        ▼        ▼
-                GitHub   iCloud   Obsidian
-               (バックアップ) (同期)  (Mac+iPhone)
-```
+v1（SOUL/MEMORY/DREAMS + クリップ）を3ヶ月運用して分かった最大の教訓:
 
-### 各コンポーネントの役割
+> **「生ログは勝手に貯まるが、編纂された知識は勝手に腐る」**
 
-| コンポーネント | 何か | Exbrainでの役割 |
-|-------------|------|----------------|
-| **Claude Code** | AnthropicのAIコーディングCLI ([公式](https://docs.anthropic.com/en/docs/claude-code)) | メインのAIアシスタント。`/clip`等のスキル実行、vault書き込み、Hook管理 |
-| **Obsidian** | 無料のMarkdownノートアプリ ([obsidian.md](https://obsidian.md)) | 全てを**読む**場所。vault = .mdファイルのフォルダ。Mac/iPhone/Android対応 |
-| **常駐エージェント** | バックグラウンドAI (例: [OpenClaw](https://openclaw.com)) | Slack/Discordを24時間監視。Claude Codeを閉じてもcronジョブ実行 |
-| **Cloud Scheduled Tasks** | Claude Code内蔵のスケジューラ ([公式](https://docs.anthropic.com/en/docs/claude-code/scheduled-tasks)) | PC不要で朝夕のDreamingを実行。MEMORY.mdとDREAMS.mdを自動更新 |
-| **xurl** | X API CLIツール | Xのツイートやブックマークを取得 |
-| **Firecrawl** | Webスクレイピング CLI | URLをクリーンなMarkdownに変換 |
-| **iCloud** | Apple のクラウド同期 | MacとiPhone間でvaultを自動同期 |
-| **GitHub** | コードホスティング | vaultのバックアップ + バージョン管理 |
+daily noteとクリップ（raw層）は自動化で毎日太るのに、顧客ページや索引（wiki層）は数週間で陳腐化した。v2はこの問題を「**夜間コンパイラ**」で解決する。
 
-### データフロー：クリップの仕組み
+| | v1 | v2 |
+|---|---|---|
+| 構造 | SOUL/MEMORY/DREAMS + フォルダ群 | **4層モデル**（raw → wiki → digest → identity） |
+| 玄関 | なし（CLAUDE.mdのみ） | **INDEX.md**（地図+鮮度ダッシュボード） |
+| raw→知識の編纂 | 手動（すぐ止まる） | **夜間compile**が毎晩自動編纂（安価モデル） |
+| 品質管理 | weekly-sync.sh（実際は未稼働） | **週次lint**（launchd登録済み・LLM不使用） |
+| リサーチ | チャットで消える | **research/**（検証済み・出典・賞味期限付き） |
+| 出典 | 任意 | **全主張に出典リンク必須**（レシート原則） |
+
+## 4層アーキテクチャ
 
 ```
-面白い記事を見つけた！
-         │
-         ▼
-  ┌─ 方法を選ぶ ────────────────────────────────────────┐
-  │                                                      │
-  │  A) /clip URL          B) Slack DMに       C) Xで   │
-  │     Claude Codeで         URL送信          ブクマ   │
-  │         │                    │              するだけ │
-  │         ▼                    ▼                │      │
-  │    Claude Code          エージェントが    (4時間後)   │
-  │    即座に実行           リアルタイム検知       │      │
-  └──────┬───────────────────┬───────────────────┬──────┘
-         │                   │                   │
-         └───────────────────┼───────────────────┘
-                             │
-                             ▼
-                   ┌─────────────────┐
-                   │   AI が処理     │
-                   │                 │
-                   │ 1. 内容を取得   │
-                   │ 2. 要約を生成   │
-                   │ 3. タグ付け     │
-                   │ 4. .md保存      │
-                   └────────┬────────┘
-                            │
-                            ▼
-               vault/clips/x/2026-04-08_slug.md
-                            │
-                  ┌─────────┼─────────┐
-                  │         │         │
-                  ▼         ▼         ▼
-            _index.md  daily note   git push
-              更新       更新       GitHubへ
-                                      │
-                                      ▼
-                                 iCloud 同期
-                                      │
-                                      ▼
-                               📱 iPhoneで読める
+┌─ identity ────────────────────────────────────────────┐
+│  SOUL.md / VOICE.md / RED-LINES.md                    │
+│  価値観・文体・越えない線 — 人間だけが書く              │
+└───────────────────────────────────────────────────────┘
+┌─ digest ──────────────────────────────────────────────┐
+│  MEMORY.md（直近の文脈） / DREAMS.md（パターン洞察）    │
+│  クラウド認知パイプラインだけが書く（朝夕+週次）         │
+└───────────────────────────────────────────────────────┘
+                        ▲ 統合
+┌─ wiki（編纂知識）──────────────────────────────────────┐
+│  entities/ clients/ insights/ research/ decisions/    │
+│  1ページ1実体・1教訓。全主張に出典リンク                │
+│  ★ 夜間compileが毎晩ここを更新する                     │
+└───────────────────────────────────────────────────────┘
+                        ▲ 編纂（compile）
+┌─ raw（生ログ・不可侵）─────────────────────────────────┐
+│  daily/（日次ログ） clips/（ブックマーク） raw/（投込み）│
+│  追記のみ。書き換え禁止 = ground truth                 │
+└───────────────────────────────────────────────────────┘
 ```
 
-### システム相関図
+**rawを不可侵にする理由**: 同じエージェントが同じノートを読み書きし続けると、ディテールが溶けて誤りが複利で増える。生ログを凍結しておけば、wiki層は何度でも作り直せる。
+
+**所有権の分離が肝**: クラウドがraw+digestを書き、ローカルの夜間compileがwikiを書き、人間がidentityを書く。書き手が層ごとに一人なので、同期競合が構造的に起きない。
+
+## 自動ループ — 脳を生かし続ける仕組み
+
+覚えている時だけ餌をやる脳は3週間で死ぬ。だから全部スケジュールに載せる:
+
+| ループ | いつ | 何を | コスト |
+|-------|------|------|-------|
+| セッションprimer | 毎セッション開始 | 今日の予定・直近の出来事・未解決ループをコンテキスト注入 | ゼロ（読むだけ） |
+| セッション記録 | 毎セッション終了 | daily雛形保証 + git同期 | ゼロ |
+| 朝夕の目 | 07:00 / 18:30 | Calendar/Slack/Gmail → daily note生成・更新 | クラウド |
+| クリップ | 4時間おき | Xブックマーク → clips/ に要約保存 | 安価 |
+| **夜間compile** | 23:30 | **rawを読み、entities/decisions/open-loops/INDEXを編纂** | **安価モデル（haiku）** |
+| **週次lint** | 日曜 09:00 | 壊れリンク・重複・陳腐化・期限切れresearch検出 | ゼロ（シェルのみ） |
+| 週次Dreaming | 日曜 21:30 | vault横断でパターン統合 → DREAMS.md | プレミアムモデル（週1のみ） |
+
+> 💰 **コスト設計**: プレミアムモデルが登場するのは週1回の統合だけ。編纂はルーティンワークなので安価モデルに回す。「routine work, routine tier」。
+
+### 夜間compile（brain-compile.sh）— v2の心臓
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                                                         │
-│  ┌──────────────┐         ┌──────────────┐              │
-│  │ Claude Code  │────────▶│  ~/vault/    │◀──────┐      │
-│  │ (CLIエージェント)│ 書込  │ (Obsidian)   │       │      │
-│  │              │         │              │  書込  │      │
-│  │ スキル:      │         │ SOUL.md      │       │      │
-│  │  /clip       │         │ MEMORY.md    │  ┌────┴────┐ │
-│  │  /auto-min   │         │ DREAMS.md    │  │ Cloud   │ │
-│  │  30+個       │         │ daily/       │  │Schedule │ │
-│  └──────────────┘         │ clips/       │  │ Tasks   │ │
-│                           │ clients/     │  │         │ │
-│  ┌──────────────┐         │ meetings/    │  │ 朝 07:00│ │
-│  │ 常駐エージェント│────────▶│ insights/    │  │ 夕 18:30│ │
-│  │ (OpenClaw)   │ 書込    │              │  └─────────┘ │
-│  │              │         └──────┬───────┘              │
-│  │ Cronジョブ:  │          git push/pull                │
-│  │  Xブクマ同期 │                │                      │
-│  │  Slack DM    │         ┌──────▼───────┐              │
-│  │  日次レポート│         │   GitHub     │              │
-│  └──────────────┘         │  (private)   │              │
-│                           └──────────────┘              │
-│                                                         │
-│        ─── 全て ~/vault/ で繋がっている ───              │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
+23:30 launchd発火
+  │
+  ├─ 1. 未コンパイル日を検出（最大3日分キャッチアップ）
+  ├─ 2. claude -p をheadless起動（haiku・Read/Write/Edit/Glob/Grepのみ）
+  │     「daily/{日付}.md と新規クリップを読み、
+  │      登場した顧客・人物・ツールのページを更新せよ。
+  │      全追記に出典 [[daily/{日付}]] を付けよ。
+  │      rawとdigestには触るな」
+  ├─ 3. 安全弁: raw/digest/identity層に変更があれば自動復元
+  ├─ 4. git commit "compile: {日付}"
+  └─ 5. push
 ```
 
-## SOUL / MEMORY / DREAMS
+LLMにgitを触らせない（スクリプトが握る）、書ける場所を層で制限する、変更は差分最小 — 暴走防止を仕組みで担保する。
 
-Exbrainの核心は、Vault直下の3つのファイル:
+### 週次lint（brain-lint.sh）— 腐敗検出
 
-```
-~/vault/
-├── SOUL.md      ← 自分は誰か（アイデンティティ・価値観・境界線）
-├── MEMORY.md    ← 何を経験したか（決定・パターン・学び）
-└── DREAMS.md    ← どこに向かうか（洞察・成長・未解決の問い）
-```
+メンテされないwikiは必ず腐る。日曜朝、LLMなしの決定論チェックで検出:
 
-### SOUL.md — アイデンティティ
+- 壊れたwikilink（wiki層のみ）
+- iCloud競合コピー（`ファイル名 2.md`）と byte-identical 重複
+- 陳腐化（直近のdailyに登場するのに30日以上更新されていないエンティティ）
+- 期限切れリサーチ（`expires:` 超過）
+- daily欠落・ほぼ空のノート（自動化の停止検知）
 
-自分が誰で、AIにどう振る舞ってほしいかを定義。Claude CodeのCLAUDE.mdと外部エージェントの性格設定を統合。
+結果は `system/lint-report.md` へ。クリティカルがあればOS通知。
 
-```markdown
-## Identity
-- 名前、役割、会社
+## INDEX.md — 玄関とコンテキスト課金
 
-## Values
-- 「完璧主義より実験主義」
-- 「APIファースト、手作業は排除」
+コンテキストウィンドウは「入るもの全てに課金される高い部屋」。だから:
 
-## Boundaries（絶対遵守）
-- 「メール送信禁止 — 下書きのみ」
-- 「Slack確認なしで送信禁止」
-```
+- **CLAUDE.mdは200行以下**を維持し、vaultを**指す**だけ（毎セッション読み込まれる常時課金ゾーン）
+- 調べ物は **INDEX.md → リンクを辿る**。フルフォルダスキャンは絶対にしない
+- 大きい質問は**subagentに読ませて結論だけ**受け取る（高い部屋には決定を、図書館は外に）
 
-### MEMORY.md — 経験の蓄積
+INDEX.mdには全セクションの地図と**鮮度ダッシュボード**（compileが毎晩更新）が載る。どの層がいつ更新されたか一目で分かり、腐敗が見える化される。
 
-AIが学んだこと全てのダイジェスト。Claude Codeの Memory（`.claude/projects/*/memory/`）を自動同期 + Cloud Scheduled Tasksが朝夕に追記。
+## research/ — 噂と検証済みを混ぜない
 
-```markdown
-## Recent
-- [2026-04-07] Obsidian Vault構築、SOUL/MEMORY/DREAMS実装
-
-## Patterns
-- 金曜は会議密度が高い（3週連続）
-- メール返信が午後に集中
-
-## CC Memory サマリー（35件）
-- feedback/21件: 「メール送信禁止」「GAS編集後は毎回commit」
-- reference/7件: API情報、ツール設定
-```
-
-### DREAMS.md — 内省と成長
-
-Dreaming（朝夕+週次）が自動更新。時間とともに浮かび上がるパターンを記録。
-
-```markdown
-## Current Insights
-- 月曜は会議10件超が常態化（3週連続）
-
-## Emerging Patterns
-| パターン | 回数 | 傾向 |
-|---------|------|------|
-| ツール→スキル→自動化サイクル | 10+ | 一貫 |
-
-## Growth Trajectory
-- Q1: スキル26個構築、cronジョブ32本稼働
-```
-
-## Clips — ナレッジクリッピング
-
-ツイートや記事を自動でvaultに蓄積。Karpathyの「知識が複利で増える」パターンで、読んだもの全てがObsidianで検索可能に。
-
-### 3つの取り込み方法
-
-| 方法 | トリガー | 最適な場面 |
-|------|---------|-----------|
-| **`/clip` スキル** | Claude Codeで `/clip <URL>` | デスクワーク中、高品質な要約 |
-| **Slack DM** | エージェントのDMにURL投稿 | 外出先（スマホ）、即座にキャプチャ |
-| **Xブックマーク自動同期** | 4時間おきに自動 | パッシブ — Xでブックマークするだけ |
-
-### 1. `/clip` — Claude Codeで手動クリップ
+チャットで消えるリサーチを資産にする。リサーチスキルの流れ:
 
 ```
-/clip https://x.com/karpathy/status/1234567890
-/clip https://example.com/great-article
-/clip https://url1.com https://url2.com          # 複数URL対応
+質問 → 3〜5のサブクエスチョンに分解
+     → 並列エージェントが別々の面を調査（Web/公式/実践者の声）
+     → 全発見をレシート化（主張+出典URL+日付）
+     → ★スケプティックエージェントが全主張を攻撃
+        ├─ 単一ソース → "single-source" に格下げ
+        ├─ 矛盾 → 両論併記 or 棄却
+        └─ 出典が辿れない → 棄却
+     → 生存者だけが research/YYYY-MM-DD_topic.md に保存
+        （frontmatterに expires: 賞味期限。lintが期限切れを検出）
 ```
 
-X tweet vs 記事を自動判定。内容取得→要約・タグ生成→`clips/`保存→daily note追記→git push。
-
-### 2. Slack DM — スマホからクリップ
-
-エージェントのSlack DMにURLを送るだけ:
-
-```
-https://example.com/interesting-article
-```
-
-エージェントがURLを検知→スクレイピング→要約→`clips/`保存→スレッド返信:
-
-```
-📎 クリップしました！
-📄 LLMが全てを変える方法
-🏷️ #ai #llm #future
-📁 vault/clips/articles/2026-04-08_llm-change-everything.md
-```
-
-**セットアップ**: 常時稼働エージェント（[OpenClaw](https://openclaw.com)等）+ Slack Socket Modeが必要。詳細は[Slack Clipセットアップ](#slack-clipセットアップ)参照。
-
-### 3. Xブックマーク自動同期
-
-普段どおりXでツイートをブックマークするだけ。cronジョブが自動でvaultに同期。
-
-**デフォルトスケジュール**: 4時間おき（8:00, 12:00, 16:00, 20:00）
-
-**必要なもの**: [xurl](https://github.com/twitterdev/xurl) CLI + OAuth2認証
-
-```bash
-# 手動テスト
-xurl bookmarks -n 5 --auth oauth2
-```
-
-### クリップファイルのフォーマット
-
-```markdown
----
-date: 2026-04-08
-type: clip
-source: x | article
-url: https://...
-author: "@username"
-tags: [ai, claude-code, agent]
-via: slack | cli | cron
----
-
-## 要約
-（3-5行の日本語要約）
-
-## キーポイント
-- ポイント1
-- ポイント2
-
-## 原文メモ
-> 重要な引用
-
-## 関連
-[[insights/...]] | [[clips/...]]
-```
-
-### daily noteへの自動連携
-
-クリップするたびに、その日のdaily noteに自動追記:
-
-```markdown
-## Clips
-- [[clips/x/2026-04-08_sam-altman-social-contract]] — Sam Altmanのsocial contract
-- [[clips/articles/2026-04-08_karpathy-llm-wiki]] — Karpathy LLM Wikiパターン
-```
-
-### Dataviewクエリ
-
-Obsidianでタグ別にクリップを閲覧:
-
-```dataview
-TABLE rows.date, rows.source, rows.author
-FROM "clips"
-WHERE type = "clip"
-FLATTEN tags as tag
-GROUP BY tag
-SORT rows.date DESC
-```
-
-### Slack Clipセットアップ
-
-Slack DM → clip を有効にする手順:
-
-1. **スキルファイル作成** — エージェントのワークスペースに:
-
-```
-workspace/skills/slack-clip/
-├── SKILL.md              ← スキル概要
-├── BEHAVIOR.md           ← 検知ルール + 処理フロー
-└── processed-clips.json  ← 重複防止トラッキング
-```
-
-2. **自動アクション追加** — エージェントの設定（`AGENTS.md`等）に:
-
-```markdown
-### URL投稿 → Vaultクリップ
-DMにURLを含むメッセージが来たら自動でvault/clips/に保存。
-
-検知: https:// を含む（転送メッセージ・Slack内部URL・画像直リンクは除外）
-処理: URL判定 → 取得 → 要約・タグ → vault保存 → git push → スレッド返信
-```
-
-3. **ツール確認** — エージェントが以下にアクセスできること:
-   - `xurl`（X API CLI）+ OAuth2認証
-   - `firecrawl`（Webスクレイピング CLI）
-   - vault リポジトリへのgitアクセス
-
-### Xブックマークcronセットアップ
-
-エージェントスケジューラにcronジョブを追加:
-
-```json
-{
-  "name": "clip-x-bookmarks",
-  "schedule": "0 8-23/4 * * *",
-  "message": "xurl bookmarks -n 20 --auth oauth2 でブックマーク取得、vault/clips/x/ と重複チェック、新規を要約して保存、_index.md更新、git push"
-}
-```
-
-## アーキテクチャ
-
-```
-┌─ Layer 1: Cloud Scheduled Tasks（PC不要）────────────────┐
-│                                                           │
-│  07:00  vault-daily-morning                               │
-│  ├── SOUL.md を読む（ユーザー理解）                         │
-│  ├── MEMORY.md を読む（直近の文脈）                         │
-│  ├── Google Calendar → 今日の予定                          │
-│  ├── Slack → 昨夜のハイライト                               │
-│  ├── Gmail → 重要な未読メール                               │
-│  ├── Morning Dreaming（昨日の振り返り→今日の注目）           │
-│  ├── MEMORY.md の Recent を更新                            │
-│  └── git push                                             │
-│                                                           │
-│  18:30  vault-daily-evening                               │
-│  ├── SOUL.md + MEMORY.md + DREAMS.md を読む                │
-│  ├── Evening Dreaming（今日+7日間→パターン検出）            │
-│  ├── MEMORY.md + DREAMS.md を更新                          │
-│  ├── 日曜: 週次Dreaming + Lint + Slack通知                  │
-│  └── git push                                             │
-│                                                           │
-└────────────────────────┬──────────────────────────────────┘
-                         │ push
-                         ▼
-┌─ GitHub（private repo）──────────────────────────────────┐
-│  vault/の全ファイル                                        │
-└────────────────────────┬──────────────────────────────────┘
-                         │ pull（launchd 毎時）
-                         ▼
-┌─ Layer 2: ローカル自動化 ────────────────────────────────┐
-│                                                           │
-│  Claude Code Hooks (async: true)                          │
-│  ├── PostToolUse → ファイル変更をログ記録                    │
-│  └── Stop → セッション終了をdaily note + MEMORY.mdに記録    │
-│                                                           │
-│  外部エージェント Cron（PCオン時の追加データ）               │
-│  ├── Salesforce/Stripe/HERP等の専門データ追記               │
-│  └── PCオフ時はスキップ（Layer 1だけで完結）                │
-│                                                           │
-└────────────────────────┬──────────────────────────────────┘
-                         │ iCloud同期
-                         ▼
-              Obsidian（Mac + iPhone）
-```
-
-## ハイブリッド設計 — 3つの性格
-
-```
-vault/
-├── system/, skills/, memory/
-│   → 静的ミラー（ダッシュボード）
-│   → Claude Codeの中身を自動同期、読むだけ
-│   → <!-- SYNCED: DO NOT EDIT --> ヘッダー付き
-│
-├── daily/
-│   → 自動ログ + 手書き日記
-│   → Calendar + Slack + Gmail + AI Analysis + Dreaming
-│   → PC閉じてても Cloud Scheduled Tasks が動く
-│
-└── meetings/, clients/, insights/
-    → Karpathyパターン（知識が複利で増える）
-    → 議事録を処理するたびに顧客ページに自動蓄積
-    → 12回の議事録を読み返す必要がない
-```
+検証を分離するのは、**新規コンテキストのチェッカーは自分の仕事をレビューするモデルより強い**から。
 
 ## Vault構造
 
 ```
 ~/vault/
-├── SOUL.md                ← アイデンティティ・価値観・境界線
-├── MEMORY.md              ← 経験のダイジェスト（CC Memoryミラー）
-├── DREAMS.md              ← Dreaming蓄積（自動更新）
-├── CLAUDE.md              ← Schema（LLM向けルール定義）
+├── INDEX.md        ← 玄関（地図+鮮度）★必ずここから
+├── CLAUDE.md       ← スキーマ正本（200行以下・ポインタに徹する）
+├── SOUL.md / VOICE.md / RED-LINES.md   ← identity層
+├── MEMORY.md / DREAMS.md               ← digest層
+├── open-loops.md   ← 未解決ループ（compileが更新）
 │
-├── daily/                 ← デイリーノート（朝夕自動生成）
-├── system/                ← Claude Codeシステムミラー（SYNCED）
-├── skills/                ← スキル一覧+個別ページ（SYNCED）
-├── memory/                ← CC Memory個別ファイルミラー（SYNCED）
-├── clips/                 ← ツイート・記事のクリッピング（自動+手動）
-│   ├── x/                    Xブックマーク（4時間おき自動同期）
-│   ├── articles/             Web記事（/clip or Slack経由）
-│   ├── _index.md             クリップ一覧（自動更新）
-│   └── tags.md               タグ別分類（Dataview対応）
+├── daily/          ← raw: 日次ログ（朝夕自動生成）
+├── clips/          ← raw: X・記事クリップ（x/ articles/）
+├── raw/            ← raw: 手動ダンプ受け皿（文字起こし等）
 │
-├── clients/               ← 顧客ナレッジ蓄積（Karpathyパターン）
-├── meetings/              ← 議事録要点
-├── decisions/             ← 経営判断ログ
-├── insights/              ← 学び・パターン + 週次Dreaming
-├── templates/             ← テンプレート
-└── scripts/               ← hookスクリプト + 同期スクリプト
+├── entities/       ← wiki: 人物 people/ ツール tools/ 組織 orgs/
+├── clients/        ← wiki: 顧客1社1ページ
+├── insights/       ← wiki: 教訓・パターン（1ファイル1教訓）
+├── research/       ← wiki: 検証済みリサーチ（expires付き）
+├── decisions/      ← wiki: 意思決定ログ（月次）
+│
+├── memory/ system/ skills/ ← Claude Code内部のミラー（SYNCED）
+├── templates/      ← entity / concept / research / daily-note / decision
+└── scripts/        ← hooks・compile・lint・sync
 ```
 
 ## セットアップ
 
 ### 前提条件
-- Claude Code（Pro or Max）
-- Obsidian（無料）
-- GitHubアカウント
-- （オプション）Slack / Google Calendar / Gmail の Connector
 
-### Step 1: Vault作成
+- Claude Code（Pro or Max） / Obsidian（無料） / GitHubアカウント
+- （オプション）Slack・Google Calendar・Gmail のConnector、常駐エージェント
+
+### Step 1: Vault作成 + テンプレート展開
 
 ```bash
-mkdir -p ~/vault/{daily,system,skills,memory/{feedback,reference,project,user},clients,meetings,decisions,insights,templates,scripts}
+git clone https://github.com/chaenmasahiro0425/exbrain.git /tmp/exbrain
+mkdir -p ~/vault && cp -r /tmp/exbrain/vault-template/* /tmp/exbrain/vault-template/.gitignore ~/vault/
 
 # iCloud同期（iPhone対応する場合）
 mv ~/vault ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/exbrain
 ln -s ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/exbrain ~/vault
 ```
 
-### Step 2: テンプレートをコピー
+### Step 2: identity層を書く（ここだけは人間の仕事）
 
-```bash
-git clone https://github.com/YOUR_USERNAME/exbrain.git /tmp/exbrain
-cp -r /tmp/exbrain/vault-template/* ~/vault/
-```
+- `SOUL.md` — 自分は誰か、AIにどう振る舞ってほしいか
+- `VOICE.md` — チャネル別の文体
+- `RED-LINES.md` — どんな指示があっても越えない線
 
 ### Step 3: Hooks設定
 
-`~/.claude/settings.json` に追加:
+`~/.claude/settings.json`:
 
 ```json
 {
   "hooks": {
-    "PostToolUse": [{
-      "matcher": "Write|Edit",
-      "hooks": [{
-        "type": "command",
-        "command": "bash ~/vault/scripts/on-file-change.sh",
-        "async": true
-      }]
-    }],
-    "Stop": [{
-      "hooks": [{
-        "type": "command",
-        "command": "bash ~/vault/scripts/on-session-end.sh",
-        "async": true
-      }]
-    }]
+    "SessionStart": [{ "hooks": [
+      { "type": "command", "command": "bash ~/vault/scripts/on-session-start.sh" }
+    ]}],
+    "Stop": [{ "hooks": [
+      { "type": "command", "command": "bash ~/vault/scripts/on-session-end.sh", "async": true }
+    ]}],
+    "PostToolUse": [{ "matcher": "Write|Edit", "hooks": [
+      { "type": "command", "command": "bash ~/vault/scripts/on-file-change.sh", "async": true }
+    ]}]
   }
 }
 ```
 
-### Step 4: 初回同期
+### Step 4: バックフィル — 持っているものを全部脳に入れる
 
-Claude Codeで:
+過去のチャットログ・議事録・メモを `raw/` に放り込み、Claude Codeに:
+
 ```
-~/.claude/skills/ の全スキル、~/.claude/projects/*/memory/ の全記憶ファイルを
-~/vault/ に同期してください。SOUL.md にアイデンティティを、MEMORY.md に記憶の
-ダイジェストを作成してください。
+~/vault/CLAUDE.md のルールに従い、raw/ の全ファイルを読んで
+entities/ clients/ insights/ を編纂して。全主張に出典リンクを付けて。
 ```
 
-### Step 5: GitHubバックアップ
+数十ファイルあるなら並列subagent（またはWorkflow）で一撃。
+
+### Step 5: ループを起動
+
+```bash
+# launchd登録（プレースホルダを自分のユーザー名に置換してから）
+cp /tmp/exbrain/launchd/com.YOURNAME.brain-*.plist ~/Library/LaunchAgents/
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.YOURNAME.brain-compile.plist
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.YOURNAME.brain-lint.plist
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.YOURNAME.brain-pull.plist
+```
+
+Cloud Scheduled Tasks（[claude.ai/code/scheduled](https://claude.ai/code/scheduled)）で朝夕のdaily note生成と週次Dreamingを登録すれば、PCを閉じても脳が動き続ける。
+
+### Step 6: GitHubバックアップ
 
 ```bash
 cd ~/vault
-git init && git add -A && git commit -m "Initial vault"
+git init && git add -A && git commit -m "Initial brain"
 gh repo create my-vault --private --source=. --push
 ```
 
-### Step 6: Cloud Scheduled Tasks（PC不要にする場合）
+## ⚠️ 同期の警告 — vaultはここで死ぬ
 
-[claude.ai/code/scheduled](https://claude.ai/code/scheduled) で:
-- **vault-daily-morning**（毎朝07:00）: SOUL.md読み→Calendar+Slack+Gmail→daily note + Morning Dreaming
-- **vault-daily-evening**（毎夕18:30）: SOUL.md+MEMORY.md+DREAMS.md読み→Evening Dreaming+パターン検出
+**同期システムは1系統に絞る**こと。エージェントがファイルを書いている最中にiCloudが同期すると、`ファイル名 2.md` 形式の競合コピーが量産される（v1の実運用で **395個** 発生した実話）。
+
+- gitを「セーブポイント層」にする: コミットした時だけ確定
+- iCloudを使う場合、週次lintが競合コピーを検出する（v2で対策済み）
+- 検出された byte-identical 重複は安全に削除できる
 
 ## 含まれるスクリプト
 
 | スクリプト | 用途 |
 |-----------|------|
-| `on-session-end.sh` | Stop hook: daily note + MEMORY.mdにセッション記録 |
-| `on-file-change.sh` | PostToolUse hook: CLAUDE.md/memory/skill変更をログ |
-| `weekly-sync.sh` | 週次Lint: 壊れたリンク・孤立ページ・古いページ検出 |
-| `git-pull-sync.sh` | 毎時git pull（stash対応） |
-| `sync-agent-to-vault.sh` | 外部エージェントのJSONデータでdaily note充実化 |
-| `sync-x-bookmarks.sh` | Xブックマーク自動取得+クリップ（4時間おき） |
+| `brain-compile.sh` | ★夜間コンパイラ: raw → wiki編纂（23:30） |
+| `brain-lint.sh` | ★週次lint: 腐敗検出（日曜09:00） |
+| `on-session-start.sh` | SessionStart hook: pull → healthcheck → primer注入 |
+| `session-primer.sh` | 「脳の状態」をセッション冒頭にコンテキスト注入 |
+| `on-session-end.sh` | Stop hook: daily雛形保証 + 同期 |
+| `on-file-change.sh` | PostToolUse hook: 変更を監査ログに記録 |
+| `vault-sync.sh` | git双方向同期（rebase・daily競合はクラウド優先） |
+| `vault-healthcheck.sh` | セッション毎の健全性点検 + ダッシュボード |
+| `sync-x-bookmarks.sh` | Xブックマーク取得（常駐エージェント用） |
+| `sync-agent-to-vault.sh` | 外部エージェントのデータでdaily note充実化 |
+| `ios-clip-shortcut.md` | iPhoneの共有メニューからワンタップクリップ |
 
-全スクリプトmacOS互換（GNU拡張なし）、セキュリティレビュー済み（PIDロック、インジェクション対策）。
+全スクリプトmacOS互換（GNU拡張なし）。LLM実行部は権限を絞ったheadlessモード。
 
-## 参考
+## 設計思想 — 参考文献
 
-- [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) — 設計思想の原点
-- [Claude Code Hooks](https://docs.anthropic.com/en/docs/claude-code/hooks) — async hookの公式ドキュメント
-- [Cloud Scheduled Tasks](https://docs.anthropic.com/en/docs/claude-code/scheduled-tasks) — PC不要の自動化
-- [QMD](https://github.com/tobi/qmd) — Markdownセマンティック検索（100ページ超で導入検討）
+- [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) — 「ナレッジベースをコードベースのように扱う」原点
+- [Claude Code Hooks](https://docs.anthropic.com/en/docs/claude-code/hooks) / [Cloud Scheduled Tasks](https://docs.anthropic.com/en/docs/claude-code/scheduled-tasks)
+- raw/wiki分離・出典レシート・スケプティック検証・賞味期限は、2026年に実務コミュニティで収斂した第二の脳パターンの実装
 
 ## ライセンス
 
-MIT
+MIT — [LICENSE](LICENSE)
