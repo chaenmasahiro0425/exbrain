@@ -57,8 +57,8 @@ for DATE in $dates; do
 2. ~/vault/daily/$DATE.md を精読。当日の新規クリップ（下記）と ~/vault/raw/ 内の未処理ファイルも確認
 3. 登場した顧客は ~/vault/clients/<kebab>.md、人物は ~/vault/entities/people/、ツール/組織は ~/vault/entities/{tools,orgs}/ の該当ページを更新（無ければ templates/entity.md 形式で新規作成）。**既存の記述は消さない（追記・訂正のみ）。全追記に出典 [[daily/$DATE]] を付ける**
 3b. **当日のclips（下記）を"読んだ記憶"として編纂する**:
-   - clipが事業/顧客/技術/自分の関心テーマに関連するなら、該当する entities/tools・clients・insights ページの「## 参考にした記事」等に `[[clips/x/...]]`（または articles/）でリンクし、なぜ関係するかを一言添える
-   - frontmatter に `fav: true`（お気に入り）が付いたclipは、たとえ単発でも必ずどこかのwikiページに取り込む
+   - clipが事業/顧客/技術/自分の関心テーマに関連するなら、該当する entities/tools・clients・insights ページの「## 参考にした記事」等に [[clips/x/...]]（または articles/）形式でリンクし、なぜ関係するかを一言添える
+   - frontmatter に fav: true（お気に入り）が付いたclipは、たとえ単発でも必ずどこかのwikiページに取り込む
    - 複数のclipが同じテーマに収束していたら insights/ に1教訓として編纂（出典に全clipリンク）
    - 単なるニュース・自分と無関係なものは取り込まない（clips/ に残るだけでよい。選別はこのcompileがやる＝人間は選ばなくてよい）
 4. 意思決定（金額・契約・方針・人事）があれば ~/vault/decisions/$MONTH.md に追記（無ければ作成）
